@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrainIQ — SOP to AI Training System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0c14;--border:#1e1e2c;--accent:#a78bfa;--accent2:#34d399;
+    --accent3:#fb923c;--text:#ddddf0;--muted:#52526a;--card:#111120;
+    --red:#f87171;--yellow:#fbbf24;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(167,139,250,0.05),transparent);pointer-events:none;z-index:0;}
+  .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px;}
+  header{border-bottom:1px solid var(--border);padding:22px 0;}
+  .logo{font-size:21px;font-weight:800;color:var(--accent);}
+  .logo span{color:var(--text);}
+  .badge{display:inline-block;margin-left:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;background:rgba(167,139,250,0.1);color:var(--accent);border:1px solid rgba(167,139,250,0.3);padding:3px 8px;border-radius:2px;}
+  .hero{padding:52px 0 36px;}
+  .hero h1{font-size:clamp(26px,4vw,46px);font-weight:800;letter-spacing:-1px;line-height:1.1;}
+  .hero h1 em{font-style:normal;color:var(--accent);}
+  .hero p{margin-top:10px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;}
+  .steps{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:30px;}
+  .step{flex:1;padding:11px 10px;display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-right:1px solid var(--border);transition:all 0.2s;}
+  .step:last-child{border-right:none;}
+  .step.active{background:rgba(167,139,250,0.06);color:var(--accent);}
+  .step.done{color:var(--accent2);}
+  .step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;border:1px solid currentColor;flex-shrink:0;}
+  .panel{display:none;}.panel.active{display:block;}
+  .field-block{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  .field-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;}
+  textarea,input[type=text],input[type=password]{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:14px;border-radius:4px;resize:vertical;outline:none;transition:border-color 0.2s;width:100%;}
+  textarea:focus,input:focus{border-color:rgba(167,139,250,0.5);}
+  textarea{min-height:200px;line-height:1.7;}
+  .two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+  @media(max-width:640px){.two-col{grid-template-columns:1fr;}}
+  .meta-fields{display:flex;flex-direction:column;gap:12px;}
+  .btn-primary{background:var(--accent);color:#08080e;border:none;padding:13px 24px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:3px;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s;}
+  .btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .btn-secondary{background:none;border:1px solid var(--border);color:var(--muted);padding:13px 18px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all 0.2s;}
+  .btn-secondary:hover{border-color:var(--accent2);color:var(--accent2);}
+  .action-bar{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap;}
+
+  /* API key box */
+  .api-box{background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.2);border-radius:4px;padding:16px 18px;margin-bottom:20px;}
+  .api-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .api-box-title span{font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:var(--muted);}
+  .api-row{display:flex;gap:8px;align-items:center;}
+  .api-row input{flex:1;min-height:unset;padding:10px 14px;}
+  .get-key-link{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);text-decoration:none;white-space:nowrap;border:1px solid rgba(52,211,153,0.3);padding:8px 12px;border-radius:3px;transition:all 0.2s;}
+  .get-key-link:hover{background:rgba(52,211,153,0.08);}
+  .api-note{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;}
+
+  /* loading */
+  .loading-panel{display:none;padding:60px 0;text-align:center;}
+  .loading-panel.active{display:block;}
+  .spinner{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent);animation:spin 0.8s linear infinite;margin:0 auto 20px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px;}
+  .loading-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;opacity:0.6;}
+
+  /* results */
+  .results-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+  .results-title{font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+  .results-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;}
+  .output-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  @media(max-width:640px){.output-grid{grid-template-columns:1fr;}}
+  .out-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .out-card.full{grid-column:1/-1;}
+  .out-card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .out-card-icon{font-size:16px;}
+  .out-card-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+  .out-card-title.purple{color:var(--accent);}
+  .out-card-title.green{color:var(--accent2);}
+  .out-card-title.orange{color:var(--accent3);}
+  .out-card-title.yellow{color:var(--yellow);}
+  .out-card-body{padding:18px;}
+  .summary-text{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;color:var(--text);}
+  .step-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .step-item{display:flex;gap:12px;align-items:flex-start;}
+  .step-badge{width:26px;height:26px;border-radius:50%;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+  .step-desc{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.6;}
+  .tip-box{margin-top:5px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent3);padding:4px 8px;background:rgba(251,146,60,0.07);border-radius:2px;border-left:2px solid var(--accent3);}
+  .key-points{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .key-points li{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text);line-height:1.5;padding-left:16px;position:relative;}
+  .key-points li::before{content:'◆';position:absolute;left:0;color:var(--accent);font-size:8px;top:3px;}
+  .quiz-list{display:flex;flex-direction:column;gap:18px;}
+  .quiz-q{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px;}
+  .quiz-num{color:var(--accent);font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;}
+  .quiz-options{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+  .quiz-opt{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);padding:5px 10px;border-radius:3px;border:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .quiz-opt.correct{background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.4);color:var(--accent2);}
+  .quiz-opt.correct::before{content:'✓';font-weight:700;}
+  .quiz-opt:not(.correct)::before{content:'○';color:var(--border);}
+  .quiz-answer{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);padding:6px 10px;background:rgba(52,211,153,0.05);border-left:2px solid var(--accent2);border-radius:0 2px 2px 0;line-height:1.5;}
+  .quiz-answer strong{color:var(--accent2);}
+  .error-box{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:4px;padding:14px 18px;font-family:'DM Mono',monospace;font-size:11px;color:var(--red);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;}
+  .print-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;border-radius:3px;transition:all 0.2s;}
+  .print-btn:hover{border-color:var(--accent);color:var(--accent);}
+  footer{padding:24px 0;border-top:1px solid var(--border);margin-top:60px;}
+  .footer-text{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+  @media print{
+    body{background:#fff;color:#000;}
+    header,footer,.steps,.action-bar,.api-box,.print-btn,.btn-secondary{display:none!important;}
+    .out-card{border:1px solid #ddd;break-inside:avoid;}
+    .out-card-title.purple,.out-card-title.green,.out-card-title.orange,.out-card-title.yellow{color:#333;}
+    .quiz-opt.correct{background:#e6faf3;border-color:#34d399;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">Train<span>IQ</span><span class="badge">AI-Powered</span></div>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;">Built by Hargun Kaur</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>SOP → <em>Training System</em></h1>
+    <p>// Paste SOP → generate AI-ready prompt → process via any LLM → get structured training + quiz</p>
+    <p style="margin-top:8px;font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;">// Standardizes AI outputs &amp; eliminates prompt engineering effort</p>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="step1"><div class="step-num">01</div>&nbsp;Input SOP</div>
+    <div class="step" id="step2"><div class="step-num">02</div>&nbsp;Processing</div>
+    <div class="step" id="step3"><div class="step-num">03</div>&nbsp;Training Content</div>
+  </div>
+
+  <!-- PANEL 1: INPUT -->
+  <div class="panel active" id="panelInput">
+
+        <div class="two-col">
+      <div class="field-block">
+        <label class="field-label"><span class="dot"></span> SOP Document</label>
+        <textarea id="sopInput" style="min-height:280px;" placeholder="Paste your SOP text here...
+
+Include: purpose, scope, steps, responsibilities, rules or guidelines."></textarea>
+      </div>
+      <div class="meta-fields">
+        <div class="field-block">
+          <label class="field-label"><span class="dot"></span> SOP Title</label>
+          <input type="text" id="sopTitle" placeholder="e.g. Customer Complaint Handling">
+        </div>
+        <div class="field-block">
+          <label class="field-label"><span class="dot"></span> Target Audience</label>
+          <input type="text" id="sopAudience" placeholder="e.g. Customer Support Agents">
+        </div>
+        <div class="field-block">
+          <label class="field-label"><span class="dot"></span> Department <span style="font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;color:#3a3a52;">(optional)</span></label>
+          <input type="text" id="sopDept" placeholder="e.g. Customer Success">
+        </div>
+        <div style="margin-top:8px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:4px;padding:12px 14px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Output will include</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.9;">
+            ◆ Structured summary<br>
+            ◆ Key learning points<br>
+            ◆ Step-by-step training guide<br>
+            ◆ 5 quiz questions + answers
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-primary" id="generateBtn" onclick="runGeneration()">⚡ Generate Training Content</button>
+      <button class="btn-secondary" onclick="loadDemo()">Load Demo SOP</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: LOADING -->
+  <div class="panel" id="panelLoading">
+    <div class="loading-panel active">
+      <div class="spinner"></div>
+      <div class="loading-text">Analyzing SOP with Gemini AI...</div>
+      <div class="loading-sub">Generating training content + quiz</div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: RESULTS -->
+  <div class="panel" id="panelResults">
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="resultsTitle">Training Content</div>
+        <div class="results-meta" id="resultsMeta"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+        <button class="btn-secondary" onclick="resetApp()" style="padding:8px 14px;font-size:11px;">← New SOP</button>
+      </div>
+    </div>
+    <div id="errorBox" class="error-box" style="display:none;"></div>
+    <div id="outputArea"></div>
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:right;">Generated by TrainIQ · Hargun Kaur · AI Automation Intern Assessment</div>
+    <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">Future Scope: Multi-format export (PPTX, PDF), LMS integration, batch SOP processing</div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div class="footer-text">TrainIQ — SOP to AI Training System</div>
+      <div class="footer-text">Hargun Kaur &nbsp;·&nbsp; AI Automation Assessment &nbsp;·&nbsp; 2025</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function loadDemo() {
+  document.getElementById('sopTitle').value = 'Customer Complaint Handling';
+  document.getElementById('sopAudience').value = 'Customer Support Agents';
+  document.getElementById('sopDept').value = 'Customer Success';
+  document.getElementById('sopInput').value = 'STANDARD OPERATING PROCEDURE\nTitle: Customer Complaint Handling\nDepartment: Customer Success\nVersion: 2.1 | Effective Date: January 2025\n\nPURPOSE\nThis SOP outlines the process for receiving, handling, escalating, and resolving customer complaints to ensure consistent service quality and customer satisfaction.\n\nSCOPE\nApplies to all Customer Support Agents handling inbound complaints via phone, email, or chat.\n\nSTEP 1 — RECEIVE AND ACKNOWLEDGE\n- Greet the customer professionally and listen without interrupting\n- Acknowledge the issue: "I understand this has been frustrating for you"\n- Do not make promises or offer solutions immediately\n- Log the complaint in the CRM system within 5 minutes of contact\n- Assign a unique Complaint ID and share it with the customer\n\nSTEP 2 — GATHER INFORMATION\n- Collect: full name, account number, date of issue, description of problem\n- Ask clarifying questions to fully understand the complaint\n- Check order/account history in the system\n- Document all details accurately in the CRM\n\nSTEP 3 — CATEGORIZE THE COMPLAINT\nUse the following categories:\n- Product Quality Issue → escalate to Quality Team\n- Billing/Payment Dispute → escalate to Finance Team\n- Delivery/Logistics Problem → escalate to Operations\n- Service/Agent Behavior → escalate to Team Lead immediately\n- General Feedback → handle at agent level\n\nSTEP 4 — RESOLVE OR ESCALATE\n- If resolvable at agent level: provide solution, confirm with customer, close ticket\n- If escalation needed: inform customer of escalation, provide timeline (24-48 hours)\n- Transfer with full notes — never make customer repeat information\n- Response time SLA: General = 24 hours, Urgent = 4 hours, Critical = 1 hour\n\nSTEP 5 — FOLLOW UP AND CLOSE\n- Contact customer within 24 hours of resolution to confirm satisfaction\n- If unsatisfied, reopen ticket and escalate to supervisor\n- Update CRM with resolution details and close ticket\n- If resolution took more than 72 hours, issue a goodwill gesture per policy\n\nKEY RULES\n- Never argue with a customer or use negative language\n- Always use the customer\'s name during the conversation\n- All complaints must be logged — no exceptions\n- Do not share internal escalation details with customers\n- Maintain confidentiality of all customer data per GDPR guidelines';
+}
+
+async function runGeneration() {
+  var sop = document.getElementById('sopInput').value.trim();
+  var title = document.getElementById('sopTitle').value.trim() || 'SOP Document';
+  var audience = document.getElementById('sopAudience').value.trim() || 'employees';
+  var dept = document.getElementById('sopDept').value.trim();
+
+  if (!sop) { alert('Please paste your SOP document.'); return; }
+
+  showPanel('panelLoading');
+  setSteps(2);
+
+  var deptLine = dept ? ' (' + dept + ' department)' : '';
+  var prompt = 'You are an expert training content developer. Analyze the following SOP and generate structured training content.\n\nIMPORTANT: Return ONLY a valid JSON object. No explanation, no markdown, no code blocks. Just raw JSON.\n\nSOP TITLE: ' + title + '\nTARGET AUDIENCE: ' + audience + deptLine + '\n\nSOP CONTENT:\n' + sop + '\n\nReturn this exact JSON structure:\n{\n  "summary": "2-3 sentence overview of what this SOP covers and why it matters",\n  "key_points": ["point 1","point 2","point 3","point 4","point 5"],\n  "training_steps": [\n    {"step": 1, "title": "Step title", "description": "What to do — 2-3 sentences", "tips": "Practical tip or common mistake"}\n  ],\n  "quiz": [\n    {"question": "Question text", "options": ["A) Option one","B) Option two","C) Option three","D) Option four"], "answer": "A", "explanation": "Why this is correct"}\n  ]\n}\n\nRules:\n- training_steps must cover ALL major steps from the SOP\n- quiz must have exactly 5 questions testing practical understanding\n- keep language clear for ' + audience + '\n- Return ONLY the JSON object, nothing else';
+
+  try {
+    var response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt })
+    });
+
+    var data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || 'API error');
+    }
+
+    var text = data.choices[0].message.content.trim();
+    var cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    var start = cleaned.indexOf('{');
+    var end = cleaned.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('No JSON found in response');
+    cleaned = cleaned.slice(start, end + 1);
+
+    var result = JSON.parse(cleaned);
+    document.getElementById('errorBox').style.display = 'none';
+    renderOutput(result, title, audience);
+    showPanel('panelResults');
+    setSteps(3);
+
+  } catch(e) {
+    document.getElementById('errorBox').style.display = 'block';
+    document.getElementById('errorBox').textContent = 'Error: ' + e.message + '\n\nCommon fixes:\n• Check your API key is correct\n• Make sure you enabled the Gemini API in Google AI Studio\n• Try again in a moment';
+    showPanel('panelResults');
+    setSteps(3);
+  }
+}
+
+function renderOutput(data, title, audience) {
+  document.getElementById('resultsTitle').textContent = title + ' — Training Module';
+  document.getElementById('resultsMeta').textContent = '// Generated for: ' + audience + ' — ' + new Date().toLocaleDateString();
+
+  var html = '<div class="output-grid">';
+
+  // Summary
+  html += '<div class="out-card full"><div class="out-card-header"><div class="out-card-icon">📋</div><div class="out-card-title purple">Module Summary</div></div><div class="out-card-body"><div class="summary-text">' + esc(data.summary || '') + '</div></div></div>';
+
+  // Key Points
+  html += '<div class="out-card"><div class="out-card-header"><div class="out-card-icon">🎯</div><div class="out-card-title yellow">Key Learning Points</div></div><div class="out-card-body"><ul class="key-points">';
+  (data.key_points || []).forEach(function(p){ html += '<li>' + esc(p) + '</li>'; });
+  html += '</ul></div></div>';
+
+  // Training Steps
+  html += '<div class="out-card"><div class="out-card-header"><div class="out-card-icon">📚</div><div class="out-card-title green">Step-by-Step Training</div></div><div class="out-card-body"><ul class="step-list">';
+  (data.training_steps || []).forEach(function(s){
+    html += '<li class="step-item"><div class="step-badge">' + (s.step||'') + '</div><div class="step-content"><div class="step-title">' + esc(s.title||'') + '</div><div class="step-desc">' + esc(s.description||'') + '</div>';
+    if (s.tips) html += '<div class="tip-box">💡 ' + esc(s.tips) + '</div>';
+    html += '</div></li>';
+  });
+  html += '</ul></div></div></div>';
+
+  // Quiz
+  html += '<div class="out-card" style="margin-bottom:0"><div class="out-card-header"><div class="out-card-icon">❓</div><div class="out-card-title orange">Knowledge Check Quiz</div></div><div class="out-card-body"><div class="quiz-list">';
+  (data.quiz || []).forEach(function(q, i){
+    html += '<div><div class="quiz-q"><span class="quiz-num">Q' + (i+1) + '.</span>' + esc(q.question||'') + '</div>';
+    if (q.options) {
+      html += '<div class="quiz-options">';
+      q.options.forEach(function(opt){
+        var ok = opt.trim().toUpperCase().startsWith((q.answer||'').trim().toUpperCase());
+        html += '<div class="quiz-opt' + (ok?' correct':'') + '">' + esc(opt) + '</div>';
+      });
+      html += '</div>';
+    }
+    html += '<div class="quiz-answer"><strong>Answer: ' + esc(q.answer||'') + '</strong> — ' + esc(q.explanation||'') + '</div></div>';
+  });
+  html += '</div></div></div>';
+
+  document.getElementById('outputArea').innerHTML = html;
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showPanel(id) {
+  ['panelInput','panelLoading','panelResults'].forEach(function(p){
+    document.getElementById(p).classList.toggle('active', p === id);
+  });
+}
+function setSteps(active) {
+  [1,2,3].forEach(function(n){
+    var el = document.getElementById('step' + n);
+    el.className = 'step' + (n === active ? ' active' : n < active ? ' done' : '');
+  });
+}
+function resetApp() {
+  showPanel('panelInput'); setSteps(1);
+  document.getElementById('outputArea').innerHTML = '';
+}
+</script>
+</body>
+</html>
